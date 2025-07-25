@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片编辑器 - 科技升级版</title>
+    <!-- 引入Fabric.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <!-- 【中文备注】引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 【中文备注】引入思源宋体（Noto Serif SC） -->
+    <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 思源黑体 CDN -->
+    <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.loli.net/css2?family=Advent+Pro:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 【核心改造】基础样式 (浅色主题) --- */
+        /* 【中文备注】修复遮挡问题的关键所在 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            margin: 0; /* 【保持】移除默认外边距 */
+            padding: 0; /* 【核心修复】移除此处的内边距，解决遮挡问题 */
+            box-sizing: border-box; /* 【新增】确保内边距和边框不会撑大 body */
+            height: 100vh; /* 【新增】让 body 高度占满视窗（iframe） */
+            display: flex; /* 【新增】使用 flex 布局让子元素能撑满高度 */
+            flex-direction: column; /* 【新增】垂直排列子元素 */
+        }
+
+        /* 【核心修复】让编辑器容器管理内边距和元素间距，而不是 body */
+        #editor-container {
+            max-width: 100%;
+            width: 100%;
+            flex-grow: 1; /* 【新增】让此容器占据所有剩余空间 */
+            margin: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 0; /* 【新增】防止 flex 子项在空间不足时溢出 */
+            padding: 8px; /* 【新增】在父容器上设置统一的内边距，替代原 body 的内边距 */
+            gap: 8px; /* 【新增】使用 gap 属性来创建子元素之间的间距，替代 margin */
+        }
+
+        /* 【核心修复】移除 canvas-container 的外边距 */
+        #canvas-container {
+            border: 1px solid #e5e7eb;
+            background-color: #D3D3D3;
+            flex-grow: 1; /* 【新增】让画布容器占据所有剩余空间 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto; /* 【保持】允许内部画布在缩放时滚动 */
+            position: relative;
+            border-radius: 8px;
+        }
+
+        /* 【核心修复】移除 main-controls 的外边距 */
+        #main-controls {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            /* margin: 8px; */ /* 【移除】外边距由父容器的 padding 和 gap 管理 */
+            border-radius: 8px;
+            flex-shrink: 0; /* 【新增】防止该元素在空间不足时被压缩 */
+        }
+
+        /* 【中文备注】科技感按钮基础样式 (浅色主题) - 无需修改 */
+        .btn-sci-fi {
+            background-color: #ffffff;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-sci-fi:hover {
+            transform: translateY(-2px);
+            color: #2563eb;
+            border-color: #60a5fa;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-export:hover {
+            color: #059669;
+            border-color: #34d399;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5), 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-reset:hover {
+            color: #dc2626;
+            border-color: #f87171;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background-color: #e5e7eb;
+        }
+
+        /* --- 其他样式保持不变 --- */
+        #text-editor-panel {
+            position: absolute;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            padding: 20px;
+            z-index: 100;
+            display: none;
+            border: 1px solid #e5e7eb;
+            width: 320px;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        #text-editor-panel .control-group { display: flex; flex-direction: column; gap: 4px; }
+        #text-editor-panel .control-label { font-size: 14px; color: #4b5563; }
+        #text-editor-panel .control-input, #text-editor-panel .control-btn { border: 1px solid #d1d5db; border-radius: 8px; height: 38px; display: flex; align-items: center; justify-content: center; background-color: #f9fafb; transition: all 0.2s ease; box-sizing: border-box; padding: 0 8px; }
+        #text-editor-panel .control-input:focus, #text-editor-panel .control-btn:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4); }
+        #text-editor-panel .control-btn:hover { background-color: #e5e7eb; }
+        #text-editor-panel .control-btn.active { background-color: #d1d5db; border-color: #9ca3af; }
+        #text-editor-panel #color-picker-wrapper { position: relative; height: 38px; border-radius: 8px; border: 1px solid #d1d5db; cursor: pointer; padding: 3px; }
+        #text-editor-panel #color-preview { width: 100%; height: 100%; border-radius: 5px; }
+        #text-editor-panel #color-picker-icon { position: absolute; bottom: 4px; right: 4px; width: 18px; height: 18px; pointer-events: none; }
+        #text-editor-panel #font-color-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        .custom-confirm-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.2s ease-in-out; }
+        .custom-confirm-modal { background-color: white; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); width: 90%; max-width: 400px; text-align: center; transform: scale(0.95); transition: transform 0.2s ease-in-out; }
+        .custom-confirm-overlay.visible { opacity: 1; }
+        .custom-confirm-overlay.visible .custom-confirm-modal { transform: scale(1); }
+        .custom-confirm-modal p { margin: 0 0 20px; font-size: 16px; color: #333; line-height: 1.5; }
+        .custom-confirm-buttons { display: flex; justify-content: flex-end; gap: 12px; }
+        .custom-confirm-buttons button { padding: 10px 20px; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background-color 0.2s, transform 0.1s; }
+        .custom-confirm-buttons button:active { transform: scale(0.98); }
+        .confirm-btn-ok { background-color: #ef4444; color: white; }
+        .confirm-btn-ok:hover { background-color: #dc2626; }
+        .confirm-btn-cancel { background-color: #e5e7eb; color: #374151; }
+        .confirm-btn-cancel:hover { background-color: #d1d5db; }
+
+        /* --- 【修复】问题3: loading 遮罩层样式调整 --- */
+        #loading-overlay {
+            position: absolute; /* 【修复】从 fixed 改为 absolute，使其在 #canvas-container 内定位 */
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #D3D3D3; /* 【修复】问题4: 背景色改为不透明的画布容器颜色 */
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #1f2937; /* 【修复】文字颜色改为深色以适应浅色背景 */
+            font-size: 1.2rem;
+            border-radius: 8px; /* 【修复】与父容器圆角保持一致 */
+        }
+        /* --- 【修复】问题3: loading 动画样式调整 --- */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.2); /* 【修复】边框颜色适应浅色背景 */
+            border-left-color: #3b82f6; /* 【修复】主色调调整 */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* 【新增】为语言选择面板添加的遮罩层样式 */
+        #language-selection-overlay {
+            position: absolute; /* 绝对定位，相对于 #canvas-container */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #D3D3D3; /* 与其他遮罩层使用相同的背景色 */
+            z-index: 1099; /* Z轴层级，必须低于语言选择面板(1100)，高于画布内容 */
+            display: none; /* 默认隐藏 */
+            border-radius: 8px; /* 与父容器圆角保持一致 */
+            opacity: 0; /* 初始透明 */
+            transition: opacity 0.3s ease-in-out; /* 添加渐变效果，更平滑 */
+        }
+
+        /* 【新增】用于显示遮罩层的类 */
+        #language-selection-overlay.visible {
+            display: block; /* 改为 block 显示 */
+            opacity: 1; /* 完全不透明 */
+        }
+
+        /* --- 【修改】语言选择视图样式微调 --- */
+        #language-selection-view {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 900px;
+            height: auto;
+            max-height: 95%;
+            margin: 0;
+            display: none; /* 保持默认隐藏 */
+            background-color: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1100; /* 确保 z-index 高于新的遮罩层(1099) */
+            flex-direction: row;
+            gap: 1rem;
+            /* 新增过渡效果，让面板出现更柔和 */
+            opacity: 0;
+            transform: translate(-50%, -45%); /* 初始位置稍微向上偏移 */
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+
+        /* 【新增】用于显示语言选择面板的类 */
+        #language-selection-view.visible {
+            display: flex; /* 改为 flex 显示 */
+            opacity: 1;
+            transform: translate(-50%, -50%); /* 移动到最终位置 */
+        }
+        #image-preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            max-height: 100%;
+            overflow: hidden;
+        }
+        #preview-image {
+            max-width: 100%; /* 【修复】调整预览图大小以适应容器 */
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        #language-options-container {
+            flex: 1;
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+        .language-section-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .language-radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); /* 【修复】响应式网格布局 */
+            gap: 0.4rem;
+        }
+        .language-radio-label {
+            display: block;
+            position: relative;
+            padding: 0.4rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            color: #000000;
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        .language-radio-label:hover {
+            border-color: #1e40af;
+            background-color: rgba(30, 64, 175, 0.1);
+        }
+        .language-radio-input:checked + span {
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .language-radio-label.checked {
+            border-color: #1e40af;
+            box-shadow: 0 0 10px rgba(30, 64, 175, 0.3);
+        }
+        #translate-now-btn {
+            background: linear-gradient(to right, #1e40af, #3b82f6);
+            font-size: 0.85rem;
+            padding: 0.4rem;
+        }
+        #translate-now-btn:hover {
+            box-shadow: 0 0 15px #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        /* --- 【修复】问题1: 导入模态框遮罩层样式调整 --- */
+        #import-modal-overlay {
+            position: absolute; /* 【修复】从 fixed 改为 absolute，使其在 #canvas-container 内定位 */
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #D3D3D3; /* 【修复】问题4: 背景色改为不透明的画布容器颜色 */
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            border-radius: 8px; /* 【修复】与父容器圆角保持一致 */
+        }
+        #import-modal {
+            background-color: #ffffff;
+            border: 1px solid #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 500px;
+            transform: scale(0.95);
+            transition: transform 0.3s ease-in-out;
+        }
+        #import-modal-overlay.visible {
+            display: flex;
+            opacity: 1;
+        }
+        #import-modal-overlay.visible #import-modal {
+            transform: scale(1);
+        }
+        .modal-tab {
+            background-color: transparent;
+            color: #000000;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .modal-tab.active {
+            color: #000000;
+            border-bottom-color: #000000;
+        }
+        .modal-tab-content {
+            display: none;
+        }
+        .modal-tab-content.active {
+            display: block;
+        }
+        #drop-zone {
+            border: 2px dashed #d1d5db;
+            background-color: #f3f4f6;
+            transition: all 0.2s;
+        }
+        #drop-zone.dragover {
+            background-color: #e5e7eb;
+            border-color: #000000;
+        }
+        .btn-sci-fi-modal {
+            background: #000000;
+            color: #ffffff;
+            transition: all 0.2s;
+        }
+        .btn-sci-fi-modal:hover {
+            box-shadow: 0 0 15px #000000;
+            transform: translateY(-2px);
+        }
+        #url-input {
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #000000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100"> <!-- 【中文备注】移除了 p-1 类，因为间距由 #editor-container 控制 -->
+<!-- 【中文备注】这是修复后的布局结构 -->
+<div id="editor-container">
+    <!-- 【中文备注】主要控制区，结构保持不变 -->
+    <div id="main-controls">
+        <button onclick="showImportModal()" class="btn-sci-fi">上传图片</button>
+        <button onclick="addText()" class="btn-sci-fi">添加文本</button>
+        <button onclick="addTransparentRect()" class="btn-sci-fi">局部恢复</button>
+        <div class="divider"></div>
+        <button onclick="undo()" class="btn-sci-fi" title="撤销上一步操作 (Ctrl+Z)">撤销</button>
+        <button onclick="redo()" class="btn-sci-fi" title="重做上一步操作 (Ctrl+Y)">重做</button>
+        <div class="divider"></div>
+        <button onclick="exportImage()" class="btn-sci-fi btn-export">导出图片</button>
+        <button onclick="saveCanvasState()" class="btn-sci-fi btn-export">保存</button>
+        <button onclick="resetAll()" class="btn-sci-fi btn-reset" title="将所有修改恢复到初始状态">复原</button>
+    </div>
+
+    <!-- 【中文备注】浮动文本编辑面板，结构保持不变 -->
+    <div id="text-editor-panel">
+        <button onclick="hideTextPanelAndDeselect()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-800 text-2xl leading-none font-bold">×</button>
+        <div class="flex flex-col gap-4">
+            <div class="control-group">
+                <label for="text-content-input" class="control-label">文本内容</label>
+                <textarea id="text-content-input" rows="3" class="control-input !h-auto p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="输入文本内容" style="resize: vertical;"></textarea>
+            </div>
+            <div class="flex items-end gap-3">
+                <div class="control-group flex-grow">
+                    <label for="font-family-select" class="control-label">字体</label>
+                    <div class="relative">
+                        <select id="font-family-select" class="control-input appearance-none w-full pr-8 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="font-size-input" class="control-label">字号</label>
+                    <input type="number" id="font-size-input" min="1" value="24"  step="4"  class="control-input w-[70px] text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="flex items-end gap-3">
+                <div class="control-group">
+                    <label for="line-height-input" class="control-label">行高</label>
+                    <input type="number" id="line-height-input" min="1" step="0.1" value="1.3" class="control-input w-[70px] text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="control-group">
+                    <label for="font-color-input" class="control-label">颜色</label>
+                    <div id="color-picker-wrapper" class="w-[60px] relative">
+                        <div id="color-preview" class="w-12 h-12 rounded border flex items-center justify-start pl-7" style="background: #fff;">
+                            <svg id="color-picker-icon1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#ffffff">
+                                <path d="M11.7266 8.27333L4.85594 15.144C4.43094 15.569 4.21894 15.781 4.07894 16.042C3.93894 16.303 3.87994 16.598 3.76194 17.188L3.14694 20.265L3.14523 20.2736C3.08036 20.5999 3.04776 20.7639 3.14194 20.858C3.23611 20.9522 3.40007 20.9196 3.72635 20.8547L3.73494 20.853L6.81194 20.238C7.40194 20.12 7.69694 20.061 7.95794 19.921C8.21894 19.781 8.43093 19.569 8.85594 19.144L15.7457 12.2542Q15.6375 12.1864 15.5305 12.1164Q14.1557 11.2169 13.0497 10.0005Q12.3124 9.18968 11.7266 8.27333ZM17.2038 10.7962L18.9999 9.00003C19.5449 8.45503 19.8179 8.18203 19.9639 7.88803C20.2409 7.32803 20.2409 6.67203 19.9639 6.11203C19.8179 5.81803 19.5449 5.54503 18.9999 5.00003C18.4549 4.45503 18.1819 4.18203 17.8879 4.03603C17.3279 3.75903 16.6719 3.75903 16.1119 4.03603C15.8179 4.18203 15.5449 4.45503 14.9999 5.00003L13.1812 6.81874Q13.7569 7.80537 14.5294 8.65502Q15.464 9.68284 16.6255 10.4428Q16.91 10.6289 17.2038 10.7962Z" fill-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <input type="color" id="font-color-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" value="#ff0000" onchange="document.querySelector('#color-preview svg').setAttribute('fill', this.value)">
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label invisible">样式</label>
+                    <button id="font-bold-btn" class="control-btn w-[50px] font-bold text-lg hover:bg-gray-100">B</button>
+                </div>
+                <div class="control-group">
+                    <label class="control-label invisible">对齐</label>
+                    <button id="align-center-btn" class="control-btn w-[50px] hover:bg-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="16" y2="6"></line><line x1="6" y1="12" x2="18" y2="12"></line><line x1="8" y1="18" x2="16" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 【中文备注】画布容器，它现在会正确地填充剩余空间 -->
+    <div id="canvas-container">
+        <canvas id="canvas"></canvas>
+        <!-- 【新增】语言选择面板的遮罩层 -->
+        <div id="language-selection-overlay"></div>
+        <!-- 【修复】问题1,2,3: 将所有遮罩层和模态框移动到 canvas-container 内部 -->
+        <div id="language-selection-view" class="hidden flex">
+            <button id="close-lang-view-btn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl leading-none font-bold z-10">×</button>
+            <div id="image-preview-container">
+                <img id="preview-image" src="" alt="图片预览">
+            </div>
+            <div id="language-options-container" class="flex flex-col">
+                <div class="flex-grow">
+                    <div>
+                        <h3 class="language-section-title">选择源语言</h3>
+                        <div id="source-language-group" class="language-radio-group mb-8"></div>
+                    </div>
+                    <div>
+                        <h3 class="language-section-title">选择目标语言</h3>
+                        <div id="dest-language-group" class="language-radio-group"></div>
+                    </div>
+                </div>
+                <div class="flex-shrink-0 mt-8">
+                    <button id="translate-now-btn" class="w-full py-3 rounded-md font-bold text-lg text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none" disabled>
+                        立即翻译
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="import-modal-overlay">
+            <div id="import-modal" class="text-black rounded-lg p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-black">导入图片进行翻译</h2>
+                    <button onclick="hideImportModal()" class="text-black hover:text-gray-600 text-2xl">×</button>
+                </div>
+                <div class="flex border-b border-gray-300 mb-4">
+                    <button id="tab-upload" class="modal-tab py-2 px-4 font-semibold active">本地上传</button>
+                    <button id="tab-url" class="modal-tab py-2 px-4 font-semibold">图片 URL</button>
+                </div>
+                <div>
+                    <div id="content-upload" class="modal-tab-content active">
+                        <div id="drop-zone" class="flex items-center justify-center w-full h-48 rounded-lg cursor-pointer">
+                            <div class="text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                <p class="mt-2 text-sm text-black">点击选择文件，或拖拽到此处</p>
+                                <p class="text-xs text-gray-500">支持 PNG, JPG, JPEG 等格式</p>
+                            </div>
+                        </div>
+                        <input type="file" id="file-input" class="hidden" accept="image/*">
+                    </div>
+                    <div id="content-url" class="modal-tab-content">
+                        <p class="text-sm text-black mb-2">请输入可公开访问的图片链接：</p>
+                        <input type="text" id="url-input" class="w-full rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-black" placeholder="https://example.com/image.png">
+                        <button onclick="handleUrlSubmit()" class="btn-sci-fi-modal w-full mt-4 py-2 rounded-md font-bold">提交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="loading-overlay" class="flex">
+            <div class="spinner"></div>
+            <p id="loading-text" class="mt-4">正在处理，请稍候...</p>
+        </div>
+    </div>
+</div>
+<script>
+      (function(d) {
+        var config = {
+          kitId: 'qfy4zvf',
+          scriptTimeout: 3000,
+          async: true
+        },
+        h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
+      })(document);
+    </script>
+<script src="pictech_editor.min.js"></script>
+<script type="module" src="config.js"></script>
+<script type="module" src="call_api.js"></script>
+</body>
+</html>
