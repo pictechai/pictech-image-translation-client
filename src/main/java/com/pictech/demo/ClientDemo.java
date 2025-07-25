@@ -27,7 +27,11 @@ public class ClientDemo {
      */
     public static void main(String[] args) throws Exception {
         // 【中文备注】创建 API 客户端实例
-        ImageTranslationApiClient client = new ImageTranslationApiClient("http://39.170.17.212:9002","pic_9DD88A6D","c5b5224728c70870f5d4009bc9806200");
+        com.pictech.client.ImageTranslationApiClient client =
+        new com.pictech.client.ImageTranslationApiClient(
+                Constants.apiBaseUrl,
+                Constants.apiKey,
+                Constants.secretKey);
 
         // 【中文备注】创建 Demo 实例
         ClientDemo demo = new ClientDemo();
@@ -143,7 +147,7 @@ public class ClientDemo {
      * @return 成功提交后，返回任务的 RequestId；否则返回 null
      * @throws Exception JSON 处理可能抛出异常
      */
-    public String demonstrateSingleSubmitWithBase64(ImageTranslationApiClient client, String resourcePath, String sourceLanguage, String targetLanguage) throws Exception {
+    public String demonstrateSingleSubmitWithBase64(com.pictech.client.ImageTranslationApiClient client, String resourcePath, String sourceLanguage, String targetLanguage) throws Exception {
         // 【中文备注】打印演示标题
         System.out.println("\n--- 演示 1: 提交 Base64 图片 ---");
 
@@ -169,7 +173,7 @@ public class ClientDemo {
                 }
 
                 // 【中文备注】调用客户端方法提交任务
-                Map<String, Object> submitResult = client.submitTaskWithBase64(imageBase64, sourceLanguage, targetLanguage);
+                Map<String, Object> submitResult = client.submitTranslationTaskWithBase64(imageBase64, sourceLanguage, targetLanguage);
                 // 【中文备注】打印格式化的响应
                 System.out.println("单任务提交(Base64) 响应: " + prettyJsonMapper.writeValueAsString(submitResult));
 
@@ -198,7 +202,7 @@ public class ClientDemo {
      * @return 成功提交后，返回任务的 RequestId；否则返回 null
      * @throws Exception JSON 处理可能抛出异常
      */
-    public String demonstrateSingleSubmitWithUrl(ImageTranslationApiClient client, String imageUrl, String sourceLanguage, String targetLanguage) throws Exception {
+    public String demonstrateSingleSubmitWithUrl(com.pictech.client.ImageTranslationApiClient client, String imageUrl, String sourceLanguage, String targetLanguage) throws Exception {
         // 【中文备注】打印演示标题
         System.out.println("\n--- 演示 2: 提交 URL 图片 ---");
 
@@ -221,7 +225,7 @@ public class ClientDemo {
         }
 
         // 【中文备注】调用客户端方法提交任务
-        Map<String, Object> submitResult = client.submitTaskWithUrl(imageUrl, sourceLanguage, targetLanguage);
+        Map<String, Object> submitResult = client.submitTranslationTaskWithUrl(imageUrl, sourceLanguage, targetLanguage);
         // 【中文备注】打印格式化的响应
         System.out.println("单任务提交(URL) 响应: " + prettyJsonMapper.writeValueAsString(submitResult));
 
@@ -259,7 +263,7 @@ public class ClientDemo {
         Thread.sleep(5000);
 
         // 【中文备注】调用客户端方法查询结果
-        Map<String, Object> queryResult = client.queryTaskResult(requestId);
+        Map<String, Object> queryResult = client.queryTranslationTaskResult(requestId);
         // 【中文备注】打印格式化的查询结果
         System.out.println("查询 RequestId [" + requestId + "] 结果: " + prettyJsonMapper.writeValueAsString(queryResult));
     }

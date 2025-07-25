@@ -30,7 +30,7 @@ public class TranslationService {
      * @throws Exception
      */
     public Map<String, Object> submitTaskFromUrl(String imageUrl, String sourceLanguage, String targetLanguage) throws Exception {
-        return apiClient.submitTaskWithUrl(imageUrl, sourceLanguage, targetLanguage);
+        return apiClient.submitTranslationTaskWithUrl(imageUrl, sourceLanguage, targetLanguage);
     }
 
     /**
@@ -42,7 +42,7 @@ public class TranslationService {
      * @throws Exception
      */
     public Map<String, Object> submitTaskFromBase64(String imageBase64, String sourceLanguage, String targetLanguage) throws Exception {
-        return apiClient.submitTaskWithBase64(imageBase64, sourceLanguage, targetLanguage);
+        return apiClient.submitTranslationTaskWithBase64(imageBase64, sourceLanguage, targetLanguage);
     }
 
     /**
@@ -56,7 +56,7 @@ public class TranslationService {
     public Map<String, Object> submitTaskFromFile(MultipartFile file, String sourceLanguage, String targetLanguage) throws Exception {
         // 将 MultipartFile 转换为 Base64 字符串
         String imageBase64 = convertFileToBase64(file);
-        return apiClient.submitTaskWithBase64(imageBase64, sourceLanguage, targetLanguage);
+        return apiClient.submitTranslationTaskWithBase64(imageBase64, sourceLanguage, targetLanguage);
     }
 
     /**
@@ -66,7 +66,7 @@ public class TranslationService {
      * @throws Exception
      */
     public Map<String, Object> queryTaskResult(String requestId) throws Exception {
-        return apiClient.queryTaskResult(requestId);
+        return apiClient.queryTranslationTaskResult(requestId);
     }
 
     /**
