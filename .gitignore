@@ -1,0 +1,16 @@
+/target/classes/
+/.idea/*
+/.idea/compiler.xml
+/.idea/dbnavigator.xml
+/.idea/dictionaries
+/.idea/encodings.xml
+/.idea/image-translation-client.iml
+/.idea/jarRepositories.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/uiDesigner.xml
+/.idea/vcs.xml
+/image-translation-client.iml
+/pictech-image-translation-client.iml
