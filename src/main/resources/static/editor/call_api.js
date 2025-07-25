@@ -15,6 +15,7 @@ const destLanguageGroup = document.getElementById('dest-language-group');
 const translateNowBtn = document.getElementById('translate-now-btn');
 const closeLangViewBtn = document.getElementById('close-lang-view-btn');
 
+
 let uploadedFile = null;
 let uploadedImageUrl = null;
 let currentTaskFilename = 'edited_image.png';

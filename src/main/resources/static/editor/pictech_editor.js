@@ -476,12 +476,12 @@ function handleUndoRedo(state) {
                 // 通常撤销/重做不应包含局部恢复的中间状态，但此处保留以防万一
                 // applyVisualEffects();
             } else {
-                 if (inpaintingImage) {
-                    inpaintingImage.clipPath = null;
-                 }
-                 if(finalImage) {
-                    finalImage.clipPath = null;
-                 }
+//                 if (inpaintingImage) {
+//                    inpaintingImage.clipPath = null;
+//                 }
+//                 if(finalImage) {
+//                    finalImage.clipPath = null;
+//                 }
             }
             canvas.renderAll();
         });
@@ -1340,11 +1340,23 @@ async function confirmRestore() {
 
         canvas.renderOnAddRemove = false;
 
-        const objectsToRemove = [inpaintingImage, finalImage, ...layersToMergeAndRemove];
-        objectsToRemove.forEach(obj => canvas.remove(obj));
+     // --- 核心修复区 ---
 
+        // 1. 定义所有需要移除的对象
+        const objectsToRemove = [inpaintingImage, finalImage, ...layersToMergeAndRemove];
+        objectsToRemove.forEach(obj => {
+            if (obj) canvas.remove(obj); // 【加固】确保对象存在再移除
+        });
+
+        // 2. 【中文备注】【核心修复】在这里重置全局变量，清除“幽灵变量”，确保状态一致性
+        // 因为原始的 finalImage 和 inpaintingImage 都已被移除，必须将它们置为 null
+        finalImage = null;
+        inpaintingImage = null; // 马上会被新对象覆盖，但好习惯是先清空
+
+        // 3. 将新合并的图片插入画布，并更新全局变量
         canvas.insertAt(mergedImage, originalInpaintingImageIndex, false);
-        inpaintingImage = mergedImage;
+        inpaintingImage = mergedImage; // ✅ 现在，inpaintingImage 指向画布上唯一存在的底图
+        // --- 修复结束 ---
 
         cancelRestore(false);
 
