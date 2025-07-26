@@ -41,8 +41,8 @@ public class ClientDemo {
         String targetLanguage = "en"; // 目标语言：英文
 
         // 【中文备注】第二部分：使用图片 URL 提交翻译任务
-        String url = "https://cbu01.alicdn.com/img/ibank/O1CN01p2n4XG1r8RPAe8njE_!!2836535586-0-cib.jpg"; // 请替换为真实、可访问的图片 URL
-        String requestIdUrl = demo.demonstrateSingleSubmitWithUrl(client, url, targetLanguage, sourceLanguage);
+        String url = "https://cbu01.alicdn.com/img/ibank/O1CN01g54Yuw26MNVWiUduP_!!939007647-0-cib.jpg"; // 请替换为真实、可访问的图片 URL
+        String requestIdUrl = demo.demonstrateSingleSubmitWithUrl(client, url, sourceLanguage,targetLanguage );
         System.out.println("URL 图片任务 ID: " + requestIdUrl);
         // 【中文备注】如果成功获取 RequestId，则查询翻译结果
         if (requestIdUrl != null && !requestIdUrl.isEmpty()) {

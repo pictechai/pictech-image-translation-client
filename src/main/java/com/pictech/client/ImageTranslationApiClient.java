@@ -118,7 +118,7 @@ public class ImageTranslationApiClient {
         payload.put("SourceLanguage", sourceLanguage);
         payload.put("TargetLanguage", targetLanguage);
         // 根据文档，翻译任务可能需要指定 OutputType，这里假设为1
-        payload.put("OutputType", 1);
+//        payload.put("OutputType", 1);
         return executePostRequest(TRANSLATION_SUBMIT_ENDPOINT, payload);
     }
 
