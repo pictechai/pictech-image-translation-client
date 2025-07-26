@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-weight: 700;
+  src: url('../fonts/NotoSerifSC-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-weight: 700;
+  src: url('../fonts/NotoSansSC-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Advent Pro';
+  font-weight: 700;
+  src: url('../fonts/AdventPro-Bold.woff2') format('woff2');
+}

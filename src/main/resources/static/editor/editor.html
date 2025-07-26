@@ -5,15 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>图片编辑器 - 科技升级版</title>
     <!-- 引入Fabric.js库 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="./js/fabric.min.js"></script>
     <!-- 【中文备注】引入 Tailwind CSS -->
+    <link rel="stylesheet" href="./css/fonts.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 【中文备注】引入思源宋体（Noto Serif SC） -->
-    <link href="https://fonts.loli.net/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
-    <!-- 思源黑体 CDN -->
-    <link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.loli.net/css2?family=Advent+Pro:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
     <style>
         /* --- 【核心改造】基础样式 (浅色主题) --- */
         /* 【中文备注】修复遮挡问题的关键所在 */
@@ -518,8 +513,8 @@
         h=d.documentElement,t=setTimeout(function(){h.className=h.className.replace(/\bwf-loading\b/g,"")+" wf-inactive";},config.scriptTimeout),tk=d.createElement("script"),f=false,s=d.getElementsByTagName("script")[0],a;h.className+=" wf-loading";tk.src='https://use.typekit.net/'+config.kitId+'.js';tk.async=true;tk.onload=tk.onreadystatechange=function(){a=this.readyState;if(f||a&&a!="complete"&&a!="loaded")return;f=true;clearTimeout(t);try{Typekit.load(config)}catch(e){}};s.parentNode.insertBefore(tk,s)
       })(document);
     </script>
-<script src="pictech_editor.min.js"></script>
-<script type="module" src="config.js"></script>
-<script type="module" src="call_api.js"></script>
+<script src="./js/pictech_editor.min.js"></script>
+<script type="module" src="./js/config.js"></script>
+<script type="module" src="./js/call_api.js"></script>
 </body>
 </html>
