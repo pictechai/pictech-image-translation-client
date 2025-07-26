@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * 图片翻译演示类，支持本地图片和 URL 图片的翻译和查询
  */
-public class ClientDemo {
+public class PictechClientQueryDemo {
 
     // 【中文备注】用于美化 JSON 输出的 ObjectMapper 实例，设为静态常量以供共用
     private static final ObjectMapper prettyJsonMapper = new ObjectMapper()
@@ -27,29 +27,17 @@ public class ClientDemo {
      */
     public static void main(String[] args) throws Exception {
         // 【中文备注】创建 API 客户端实例
-        com.pictech.client.ImageTranslationApiClient client =
-        new com.pictech.client.ImageTranslationApiClient(
+        ImageTranslationApiClient client =
+        new ImageTranslationApiClient(
                 Constants.apiBaseUrl,
                 Constants.apiKey,
                 Constants.secretKey);
 
         // 【中文备注】创建 Demo 实例
-        ClientDemo demo = new ClientDemo();
+        Map<String, Object> queryResult = client.queryTranslationTaskResult("60dcbb8e-ea8e-4a7c-bd42-cb42f06c4e86");
+        // 【中文备注】打印格式化的查询结果
+        System.out.println("查询结果: " + prettyJsonMapper.writeValueAsString(queryResult));
 
-        // 【中文备注】定义源语言和目标语言
-        String sourceLanguage = "zh"; // 源语言：中文
-        String targetLanguage = "en"; // 目标语言：英文
-
-        // 【中文备注】第二部分：使用图片 URL 提交翻译任务
-        String url = "https://cbu01.alicdn.com/img/ibank/O1CN01p2n4XG1r8RPAe8njE_!!2836535586-0-cib.jpg"; // 请替换为真实、可访问的图片 URL
-        String requestIdUrl = demo.demonstrateSingleSubmitWithUrl(client, url, targetLanguage, sourceLanguage);
-        System.out.println("URL 图片任务 ID: " + requestIdUrl);
-        // 【中文备注】如果成功获取 RequestId，则查询翻译结果
-        if (requestIdUrl != null && !requestIdUrl.isEmpty()) {
-            demo.demonstrateSingleQuery(client, requestIdUrl);
-        } else {
-            System.err.println("无法获取有效的 URL 图片任务 ID，跳过查询。");
-        }
     }
 
     /**
@@ -136,7 +124,7 @@ public class ClientDemo {
      * @return 成功提交后，返回任务的 RequestId；否则返回 null
      * @throws Exception JSON 处理可能抛出异常
      */
-    public String demonstrateSingleSubmitWithBase64(com.pictech.client.ImageTranslationApiClient client, String resourcePath, String sourceLanguage, String targetLanguage) throws Exception {
+    public String demonstrateSingleSubmitWithBase64(ImageTranslationApiClient client, String resourcePath, String sourceLanguage, String targetLanguage) throws Exception {
         // 【中文备注】打印演示标题
         System.out.println("\n--- 演示 1: 提交 Base64 图片 ---");
 
@@ -191,7 +179,7 @@ public class ClientDemo {
      * @return 成功提交后，返回任务的 RequestId；否则返回 null
      * @throws Exception JSON 处理可能抛出异常
      */
-    public String demonstrateSingleSubmitWithUrl(com.pictech.client.ImageTranslationApiClient client, String imageUrl, String sourceLanguage, String targetLanguage) throws Exception {
+    public String demonstrateSingleSubmitWithUrl(ImageTranslationApiClient client, String imageUrl, String sourceLanguage, String targetLanguage) throws Exception {
         // 【中文备注】打印演示标题
         System.out.println("\n--- 演示 2: 提交 URL 图片 ---");
 
